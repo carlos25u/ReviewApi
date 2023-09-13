@@ -54,6 +54,15 @@ namespace ReviewApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddCors(optcion =>
+            {
+                optcion.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                .AllowAnyMethod()
+                );
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -68,6 +77,8 @@ namespace ReviewApi
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseCors("CorsPolicy");
 
 
             app.MapControllers();

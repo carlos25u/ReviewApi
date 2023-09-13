@@ -18,18 +18,46 @@ namespace ReviewApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Reviews>>> GetReviews()
         {
-            return await _contexto.Reviews.ToListAsync();
+            var consultaFull = from r in _contexto.Reviews
+                               join u in _contexto.Usuarios on r.UsuariosId equals u.UsuariosId into temp
+                               from sub in temp.DefaultIfEmpty()
+                               select new
+                               {
+                                   ReviewId = r.ReviewId,
+                                   Restaurante = r.Restaurante,
+                                   fecha = r.Fecha,
+                                   comentario = r.Comentario,
+                                   UsuarioId = sub != null ? sub.UsuariosId : (int?)null,
+                                   username = sub != null ? sub.Username : null
+                               };
+            var result = await consultaFull.ToListAsync();
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Reviews>> GetReview(int id)
         {
-            var review = await _contexto.Reviews.FindAsync(id);
+            var consultaFull = from r in _contexto.Reviews
+                               join u in _contexto.Usuarios on r.UsuariosId equals u.UsuariosId into temp
+                               from sub in temp.DefaultIfEmpty()
+                               where r.ReviewId == id
+                               select new
+                               {
+                                   ReviewId = r.ReviewId,
+                                   Restaurante = r.Restaurante,
+                                   fecha = r.Fecha,
+                                   comentario = r.Comentario,
+                                   UsuarioId = sub != null ? sub.UsuariosId : (int?)null,
+                                   username = sub != null ? sub.Username : null
+                               };
+            var reviewEncontrada = await consultaFull.FirstOrDefaultAsync();
 
-            if (review == null)
-                return NotFound("Usuario no encontrado...........");
+            if (reviewEncontrada == null)
+            {
+                return NotFound("Review no fue encontrada");
+            }
 
-            return review;
+            return Ok(reviewEncontrada);
         }
 
         [HttpPut]
